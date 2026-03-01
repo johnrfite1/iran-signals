@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iran Signal Board</title>
+  <script>
+    if (localStorage.getItem("irantracker-theme") === "dark")
+      document.documentElement.setAttribute("data-theme", "dark");
+  </script>
+  <style>
+    :root {
+      --bg: #f0f2f5;
+      --bg-2: #f7f8fa;
+      --panel: #ffffff;
+      --ink: #1a1f2e;
+      --ink-muted: #5a6373;
+      --line: #dfe2e8;
+      --accent: #2563eb;
+      --accent-2: #7c3aed;
+      --chip: #e8eaef;
+      --ok: #16a34a;
+      --warn: #d97706;
+      --fail: #dc2626;
+      --hold: #6366f1;
+      --tag-n: #92400e;
+      --tag-s: #1e40af;
+      --accent-bg: rgba(37, 99, 235, 0.1);
+      --ok-bg: rgba(22, 163, 74, 0.1);
+      --warn-bg: rgba(217, 119, 6, 0.1);
+      --fail-bg: rgba(220, 38, 38, 0.1);
+      --hold-bg: rgba(99, 102, 241, 0.1);
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --radius: 12px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+      --mono: "SF Mono", "Fira Code", "JetBrains Mono", ui-monospace, monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --bg-2: #1e293b;
+      --panel: #1e293b;
+      --ink: #e2e8f0;
+      --ink-muted: #94a3b8;
+      --line: #334155;
+      --accent: #3b82f6;
+      --accent-2: #a78bfa;
+      --chip: #334155;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --fail: #ef4444;
+      --hold: #818cf8;
+      --tag-n: #fdba74;
+      --tag-s: #93c5fd;
+      --accent-bg: rgba(59, 130, 246, 0.15);
+      --ok-bg: rgba(34, 197, 94, 0.15);
+      --warn-bg: rgba(245, 158, 11, 0.15);
+      --fail-bg: rgba(239, 68, 68, 0.15);
+      --hold-bg: rgba(129, 140, 248, 0.15);
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: var(--font);
+      background: var(--bg);
+      padding: 14px;
+    }
+
+    /* Shell & Layout */
+    .shell {
+      max-width: 1320px;
+      margin: 0 auto;
+      display: grid;
+      gap: 14px;
+    }
+
+    .hero,
+    .panel,
+    .phase-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      animation: enter 0.5s ease both;
+      animation-delay: calc(var(--i, 0) * 45ms);
+    }
+
+    @keyframes enter {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Hero – compact ribbon */
+    .hero {
+      padding: 12px 18px;
+    }
+
+    .hero h1 {
+      font-family: var(--font);
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+      margin-bottom: 4px;
+      color: var(--ink);
+      text-transform: uppercase;
+    }
+
+    .hero p {
+      color: var(--ink-muted);
+      max-width: 980px;
+      line-height: 1.5;
+      font-size: 0.88rem;
+    }
+
+    .meta-row {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      color: var(--ink-muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--chip);
+      padding: 3px 8px;
+      font-family: var(--mono);
+    }
+
+    .inline-head {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .info-tip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      vertical-align: middle;
+      z-index: 2;
+    }
+
+    .info-tip-dot {
+      width: 15px;
+      height: 15px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--bg-2);
+      color: var(--ink-muted);
+      font-size: 0.6rem;
+      font-weight: 900;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: help;
+      user-select: none;
+    }
+
+    .info-tip-card {
+      position: absolute;
+      left: 0;
+      top: calc(100% + 7px);
+      width: min(340px, calc(100vw - 40px));
+      padding: 8px 9px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink-muted);
+      font-size: 0.74rem;
+      line-height: 1.45;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(4px);
+      pointer-events: none;
+      transition: opacity 0.16s ease, transform 0.16s ease;
+    }
+
+    .info-tip:hover .info-tip-card,
+    .info-tip:focus-within .info-tip-card {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .info-tip:focus-visible .info-tip-dot {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button,
+    .file-label {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+    }
+
+    button:hover,
+    .file-label:hover {
+      border-color: var(--accent);
+      background: var(--accent-bg);
+    }
+
+    .file-label input {
+      display: none;
+    }
+
+    .stamp {
+      font-size: 0.77rem;
+      color: var(--ink-muted);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      padding: 10px;
+    }
+
+    .stat h3 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ink-muted);
+      margin-bottom: 5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat p {
+      font-size: 1.2rem;
+      font-weight: 800;
+      font-family: var(--mono);
+      color: var(--ink);
+    }
+
+    /* Main Layout */
+    .layout {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 14px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 14px;
+      align-self: start;
+    }
+
+    /* Phase Cards */
+    .phase-card {
+      padding: 12px;
+    }
+
+    .phase-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed var(--line);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .phase-head:hover {
+      opacity: 0.85;
+    }
+
+    .phase-head h2 {
+      font-size: 1.05rem;
+      letter-spacing: 0.02em;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .phase-chevron {
+      display: inline-block;
+      transition: transform 0.25s ease;
+      font-size: 0.7rem;
+      color: var(--ink-muted);
+      line-height: 1;
+    }
+
+    .phase-card.collapsed .phase-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .phase-head p {
+      color: var(--ink-muted);
+      font-size: 0.84rem;
+      line-height: 1.4;
+    }
+
+    .phase-meta {
+      color: var(--accent-2);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .phase-stat {
+      font-size: 0.72rem;
+      font-weight: 800;
+      font-family: var(--mono);
+    }
+    .phase-stat-g { color: var(--ok); }
+    .phase-stat-a { color: var(--warn); }
+    .phase-stat-r { color: var(--fail); }
+    .phase-stat-t { color: var(--ink-muted); font-weight: 700; }
+
+    /* Collapsible item list */
+    .item-list-wrap {
+      display: grid;
+      grid-template-rows: 1fr;
+      transition: grid-template-rows 0.3s ease;
+    }
+
+    .phase-card.collapsed .item-list-wrap {
+      grid-template-rows: 0fr;
+    }
+
+    .item-list-wrap > .item-list {
+      overflow: visible;
+    }
+
+    .phase-card.collapsed .item-list-wrap > .item-list {
+      overflow: hidden;
+    }
+
+    .item-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    /* Items */
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      transition: border-color 0.2s ease;
+    }
+
+    .item-top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .item-top input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+    }
+
+    .item-title {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .item-code {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 2px 5px;
+      background: var(--chip);
+      color: var(--ink-muted);
+    }
+
+    .tag {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-radius: 999px;
+      padding: 3px 7px;
+      border: 1px solid;
+    }
+
+    .tag.n {
+      border-color: color-mix(in srgb, var(--tag-n) 34%, transparent);
+      color: var(--tag-n);
+      background: color-mix(in srgb, var(--tag-n) 9%, transparent);
+    }
+
+    .tag.s {
+      border-color: color-mix(in srgb, var(--tag-s) 34%, transparent);
+      color: var(--tag-s);
+      background: color-mix(in srgb, var(--tag-s) 10%, transparent);
+    }
+
+    .item p {
+      font-size: 0.82rem;
+      color: var(--ink-muted);
+      line-height: 1.45;
+    }
+
+    /* Segmented Controls */
+    .item-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .control-group {
+      display: grid;
+      gap: 3px;
+    }
+
+    .control-group label {
+      font-size: 0.7rem;
+      color: var(--ink-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .seg-group {
+      display: flex;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .seg-btn {
+      flex: 1;
+      padding: 5px 8px;
+      border: none;
+      background: transparent;
+      font-size: 0.72rem;
+      font-weight: 800;
+      cursor: pointer;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      transition: all 0.15s ease;
+      font-family: var(--font);
+      border-radius: 0;
+    }
+
+    .seg-btn:not(:last-child) {
+      border-right: 1px solid var(--line);
+    }
+
+    .seg-btn:hover {
+      background: var(--chip);
+    }
+
+    .seg-btn.active {
+      color: #fff;
+    }
+    .seg-btn.active[data-value="Green"] { background: var(--ok); }
+    .seg-btn.active[data-value="Amber"] { background: var(--warn); }
+    .seg-btn.active[data-value="Red"] { background: var(--fail); }
+    .seg-btn.active[data-value="High"] { background: var(--ok); }
+    .seg-btn.active[data-value="Med"] { background: var(--warn); }
+    .seg-btn.active[data-value="Low"] { background: var(--fail); }
+
+    /* Note Toggle */
+    .note-section {
+      display: grid;
+      gap: 6px;
+    }
+
+    .note-toggle {
+      justify-self: start;
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink-muted);
+      cursor: pointer;
+      font-weight: 700;
+      font-family: var(--font);
+    }
+
+    .note-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .item-notes {
+      display: none;
+    }
+
+    .item-notes.visible {
+      display: block;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 58px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 0.82rem;
+      background: var(--panel);
+      color: var(--ink);
+      font-family: var(--mono);
+    }
+
+    /* Side Panels */
+    .side-panel {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      height: fit-content;
+    }
+
+    .side-panel h3 {
+      font-size: 0.94rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--ink);
+      margin: 0;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .gate-list,
+    .trigger-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .gate,
+    .trigger {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 9px;
+      background: var(--panel);
+      display: grid;
+      gap: 6px;
+    }
+
+    .gate-head,
+    .trigger-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      align-items: center;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .gate-badge,
+    .trigger-badge {
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 0.67rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border: 1px solid;
+      font-weight: 900;
+    }
+
+    /* Status Badges */
+    .pass {
+      color: var(--ok);
+      border-color: color-mix(in srgb, var(--ok) 40%, transparent);
+      background: var(--ok-bg);
+    }
+
+    .risk {
+      color: var(--warn);
+      border-color: color-mix(in srgb, var(--warn) 36%, transparent);
+      background: var(--warn-bg);
+    }
+
+    .fail {
+      color: var(--fail);
+      border-color: color-mix(in srgb, var(--fail) 40%, transparent);
+      background: var(--fail-bg);
+    }
+
+    .hold {
+      color: var(--hold);
+      border-color: color-mix(in srgb, var(--hold) 40%, transparent);
+      background: var(--hold-bg);
+      animation: pulse 1.6s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 var(--hold-bg); }
+      50% { box-shadow: 0 0 0 8px transparent; }
+    }
+
+    .gate p,
+    .trigger p,
+    .tiny {
+      font-size: 0.76rem;
+      color: var(--ink-muted);
+      line-height: 1.4;
+    }
+
+    .trigger-controls {
+      display: grid;
+      gap: 6px;
+    }
+
+    .checkline {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .checkline input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--fail);
+    }
+
+    /* End-State */
+    .end-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .end-row {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      background: var(--panel);
+      display: grid;
+      gap: 6px;
+    }
+
+    .end-row-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .end-row-head strong {
+      font-family: var(--mono);
+    }
+
+    /* Custom Range Sliders */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--line);
+      outline: none;
+      border: none;
+      padding: 0;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: 2px solid var(--panel);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      transition: transform 0.15s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: 2px solid var(--panel);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--line);
+    }
+
+    .sum {
+      padding: 8px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      font-family: var(--mono);
+      color: var(--ink);
+      background: var(--bg-2);
+    }
+
+    .sum.bad {
+      color: var(--fail);
+      border-color: color-mix(in srgb, var(--fail) 40%, transparent);
+      background: var(--fail-bg);
+    }
+
+    .snapshot-priority {
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .snapshot-priority h3 {
+      font-size: 0.94rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--ink);
+      margin: 0;
+    }
+
+    .snapshot-priority textarea {
+      min-height: 220px;
+    }
+
+    /* Item Status Borders */
+    .item[data-status="Green"] { border-left: 3px solid var(--ok); }
+    .item[data-status="Amber"] { border-left: 3px solid var(--warn); }
+    .item[data-status="Red"] { border-left: 3px solid var(--fail); }
+
+    /* Day Counter */
+    .day-counter {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 999px;
+      padding: 3px 10px 3px 8px;
+      font-weight: 900;
+      font-size: 0.82rem;
+      letter-spacing: 0.03em;
+    }
+
+    .day-counter input {
+      width: 36px;
+      border: none;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+      background: transparent;
+      color: #fff;
+      font-weight: 900;
+      font-size: 0.82rem;
+      text-align: center;
+      font-family: var(--mono);
+      outline: none;
+    }
+
+    .day-counter input:focus {
+      border-bottom-color: #fff;
+    }
+
+    /* Window Badges */
+    .window-badge {
+      display: inline-block;
+      font-size: 0.63rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid;
+      vertical-align: middle;
+    }
+
+    .window-active {
+      color: var(--warn);
+      border-color: color-mix(in srgb, var(--warn) 36%, transparent);
+      background: var(--warn-bg);
+    }
+
+    .window-expired {
+      color: var(--ink-muted);
+      border-color: var(--line);
+      background: var(--chip);
+    }
+
+    .window-pending {
+      color: var(--accent);
+      border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+      background: var(--accent-bg);
+    }
+
+    .cd-warning {
+      padding: 8px;
+      border: 1px solid color-mix(in srgb, var(--fail) 40%, transparent);
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--fail);
+      background: var(--fail-bg);
+    }
+
+    /* Responsive */
+    @media (max-width: 1120px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .sidebar {
+        position: static;
+      }
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 10px;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .item-controls {
+        grid-template-columns: 1fr;
+      }
+      .toolbar {
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero" style="--i:0">
+      <h1>Iran Signal Board</h1>
+      <p>
+        Operational checklist for the hardened decision matrix. Track milestone status, confidence,
+        gate outcomes, invalidation triggers, and end-state convergence from one page.
+      </p>
+      <div class="meta-row">
+        <span class="chip">Version 2.2</span>
+        <span class="chip">Revised 01 March 2026</span>
+        <span class="day-counter">D+<input id="dayInput" type="number" min="0" max="365" value="2"></span>
+      </div>
+    </section>
+
+    <section class="panel snapshot snapshot-priority" style="--i:1">
+      <div class="panel-head">
+        <h3>Current Snapshot</h3>
+        <span class="info-tip" tabindex="0" aria-label="More context">
+          <span class="info-tip-dot" aria-hidden="true">i</span>
+          <span class="info-tip-card" role="tooltip">Meaning: this is the high-level operational brief for handoffs and quick situational understanding. Why it matters: the rest of the tracker explains and scores the details behind this summary.</span>
+        </span>
+      </div>
+      <p class="tiny">Start here for the one-screen analyst narrative, then validate details in phases, gates, triggers, and convergence estimates below.</p>
+      <textarea id="snapshot" aria-label="Current snapshot notes"></textarea>
+    </section>
+
+    <section class="panel toolbar" style="--i:2">
+      <div class="toolbar-left">
+        <button id="exportBtn" type="button">Export JSON</button>
+        <label class="file-label" for="importFile">Import JSON
+          <input id="importFile" type="file" accept="application/json">
+        </label>
+        <button id="resetBtn" type="button">Reset</button>
+      </div>
+      <div class="toolbar-right">
+        <button id="themeToggle" type="button">Dark Mode</button>
+        <span class="stamp" id="lastSaved">Last saved: never</span>
+      </div>
+    </section>
+
+    <section class="panel" style="--i:3">
+      <div class="stats-grid" id="stats"></div>
+    </section>
+
+    <section class="layout">
+      <section class="stack" id="phases"></section>
+
+      <section class="stack sidebar">
+        <section class="panel side-panel" style="--i:4">
+          <div class="panel-head">
+            <h3>Decision Gates</h3>
+            <span class="info-tip" tabindex="0" aria-label="More context">
+              <span class="info-tip-dot" aria-hidden="true">i</span>
+              <span class="info-tip-card" role="tooltip">Meaning: each gate is a day-bound checkpoint that evaluates required [N] milestones. Why it matters: gate outcomes drive explicit branch decisions.</span>
+            </span>
+          </div>
+          <div class="gate-list" id="gates"></div>
+        </section>
+
+        <section class="panel side-panel" style="--i:5">
+          <div class="panel-head">
+            <h3>Invalidation Triggers</h3>
+            <span class="info-tip" tabindex="0" aria-label="More context">
+              <span class="info-tip-dot" aria-hidden="true">i</span>
+              <span class="info-tip-card" role="tooltip">Meaning: trigger thresholds represent events that can invalidate the baseline plan. Why it matters: once fired, analysts should reassess branch assumptions immediately.</span>
+            </span>
+          </div>
+          <div class="trigger-list" id="triggers"></div>
+        </section>
+
+        <section class="panel side-panel" style="--i:6">
+          <div class="panel-head">
+            <h3>End-State Convergence</h3>
+            <span class="info-tip" tabindex="0" aria-label="More context">
+              <span class="info-tip-dot" aria-hidden="true">i</span>
+              <span class="info-tip-card" role="tooltip">Meaning: these sliders estimate current convergence probability across four modeled outcomes. Why it matters: convergence informs planning posture and risk communication.</span>
+            </span>
+          </div>
+          <p class="tiny">Adjust estimated convergence probabilities. Keep combined total at 100%.</p>
+          <div class="end-grid" id="endStates"></div>
+          <div class="sum" id="sumReadout"></div>
+          <div class="cd-warning" id="cdWarning" style="display:none"></div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      var STORAGE_KEY = "irantracker-v1";
+      var THEME_KEY = "irantracker-theme";
+
+      var PHASES = [
+        {
+          id: "phase1", dayStart: 1, dayEnd: 7,
+          title: "Phase I: Kinetic Paralysis (Days 1-7)",
+          objective: "Sever regime leadership from C2 and WMD infrastructure before coherent counter-mobilization.",
+          items: [
+            { code: "1.1", title: "Absolute Decapitation", tag: "N", criteria: "Khamenei death/incapacitation confirmed by at least two source classes; proof-of-life operations not credible.", status: "Green", confidence: "High" },
+            { code: "1.2", title: "Succession Paralysis", tag: "N", criteria: "Assembly of Experts fails to broadcast a broadly recognized successor within 72 hours.", status: "Amber", confidence: "Med" },
+            { code: "1.3", title: "C2 Severance", tag: "N", criteria: "Regional IRGC commands operate without central synchronization. KPI: >60% node degradation, no synchronized multi-theater salvos for 48h.", status: "Amber", confidence: "Med" },
+            { code: "1.4", title: "WMD Lockdown", tag: "N", criteria: "Natanz/Fordow/Isfahan physically denied or isolated from rogue extraction; zero confirmed radiological release.", status: "Amber", confidence: "Low" },
+            { code: "1.5", title: "Information Dominance", tag: "S", criteria: "IRIB continuity disrupted or contested, with resilient alternative channels available for Artesh and civil messaging.", status: "Amber", confidence: "Low" }
+          ]
+        },
+        {
+          id: "phase2", dayStart: 7, dayEnd: 14,
+          title: "Phase II: Artesh Pivot and Social Fracture (Days 7-14)",
+          objective: "Shift monopoly on violence from IRGC to national military institutions while reducing legitimacy of repression.",
+          items: [
+            { code: "2.1", title: "Silent Mutiny", tag: "N", criteria: "Artesh formations refuse IRGC-aligned suppression orders in major urban centers.", status: "Amber", confidence: "Low" },
+            { code: "2.2", title: "Active Shield", tag: "S", criteria: "Artesh units interpose or engage against IRGC/Basij repression in at least two major cities.", status: "Amber", confidence: "Low" },
+            { code: "2.3", title: "Qom Pivot", tag: "N", criteria: "Senior quietist clerical figures publicly withdraw legitimacy from violent repression.", status: "Red", confidence: "Low" },
+            { code: "2.4", title: "Command Amnesty Uptake", tag: "S", criteria: "IRGC/Basij defections follow verified amnesty channels. KPI: >30% attrition in targeted local units over seven days.", status: "Amber", confidence: "Low" },
+            { code: "2.5", title: "Geographic Cohesion", tag: "N", criteria: "Transition-supportive conditions present in at least 4 of 6 key regions.", status: "Amber", confidence: "Low" }
+          ]
+        },
+        {
+          id: "phase3", dayStart: 15, dayEnd: 30,
+          title: "Phase III: Economic and Social Defibrillation (Days 15-30)",
+          objective: "Prevent humanitarian collapse and convert anti-regime momentum into durable civic order.",
+          items: [
+            { code: "3.1", title: "Bazaari and Informal Economy Reopening", tag: "N", criteria: "Grand Bazaar and informal trade channels resume sustained activity. KPI: >=60% baseline and no 72h closure relapse.", status: "Amber", confidence: "Low" },
+            { code: "3.2", title: "Neighborhood Security Handover", tag: "N", criteria: "Local resistance groups transition to accountable community security linked to Artesh command.", status: "Amber", confidence: "Low" },
+            { code: "3.3", title: "Infrastructure and Port Survival", tag: "N", criteria: "Power, water, fuel systems remain functional and Bandar Abbas stays open for humanitarian throughput.", status: "Amber", confidence: "Low" },
+            { code: "3.4", title: "Liquidity and Asset Repatriation", tag: "S", criteria: "External liquidity enters formal banking while illicit elite capital flight is disrupted.", status: "Amber", confidence: "Low" },
+            { code: "3.5", title: "Formal-Informal Alignment", tag: "N", criteria: "Informal channels begin cooperating with transitional controls. KPI: official-street FX spread <15% for 14 days.", status: "Amber", confidence: "Low" }
+          ]
+        },
+        {
+          id: "phase4", dayStart: 30, dayEnd: 90,
+          title: "Phase IV: Transitional Consolidation (Days 30-90)",
+          objective: "Build internally legitimate governance with enough coercive and administrative capacity to prevent rollback.",
+          items: [
+            { code: "4.1", title: "Internal-Led Hybrid Council", tag: "N", criteria: "Governing authority is convened by internal actors first, then integrates diaspora figures.", status: "Amber", confidence: "Low" },
+            { code: "4.2", title: "Basij Social Conversion", tag: "N", criteria: "Basij-linked welfare/patronage functions are civilianized while paramilitary coercive capability is removed.", status: "Amber", confidence: "Low" },
+            { code: "4.3", title: "Diplomatic Normalization", tag: "S", criteria: "Interim authority signs intrusive IAEA framework and receives phased sanctions relief.", status: "Amber", confidence: "Low" },
+            { code: "4.4", title: "Civil Information Recovery", tag: "S", criteria: "Broad internet restoration and re-emergence of non-state media with reduced censorship.", status: "Amber", confidence: "Low" }
+          ]
+        }
+      ];
+
+      var GATES = [
+        {
+          id: "A",
+          title: "Gate A (D+5): Paralysis Check",
+          required: ["1.1", "1.2", "1.3"],
+          branch: "If failed, pivot to coercive containment and regional force protection."
+        },
+        {
+          id: "B",
+          title: "Gate B (D+14): Monopoly-on-Violence Check",
+          required: ["2.1", "2.3", "2.5"],
+          branch: "If failed, pivot to fragmentation containment, border control, and WMD denial."
+        },
+        {
+          id: "C",
+          title: "Gate C (D+30): Legitimacy Check",
+          required: ["3.1", "3.2", "3.3", "3.5"],
+          branch: "If failed, deprioritize political acceleration and focus on humanitarian corridors."
+        },
+        {
+          id: "D",
+          title: "Gate D (D+90): Consolidation Check",
+          required: ["4.1", "4.2"],
+          branch: "If failed, assume rollback risk and transition to long-horizon containment posture."
+        }
+      ];
+
+      var TRIGGERS = [
+        { id: "russia_china", title: "Russia/China Spoiler", window: "D0-D+30", threshold: "Material reconstitution support sustains organized IRGC resistance." },
+        { id: "trap_1991", title: "1991 Trap", window: "D0-D+14", threshold: "Strategic-only posture plus documented mass repression in cities." },
+        { id: "cyber", title: "Cyber Pearl Harbor", window: "D0-D+60", threshold: "Sustained critical-infrastructure disruption with major economic or casualty effects." },
+        { id: "arab_veto", title: "Arab Street Veto", window: "D0-D+30", threshold: "Key Gulf partners revoke offensive basing or airspace access." },
+        { id: "ground_pivot", title: "Ground War Pivot", window: "D0-D+90", threshold: "External conventional forces must seize or hold terrain/site control." },
+        { id: "turkey_kurdish", title: "Turkey-Kurdish Escalation", window: "D0-D+90", threshold: "Cross-border operations fracture coalition alignment and shift theater priorities." },
+        { id: "humanitarian", title: "Humanitarian Cascade", window: "D0-D+90", threshold: "Refugee flow >1.5M or sustained food/fuel spike >300% in multiple centers." },
+        { id: "nationalist_backlash", title: "Nationalist Backlash Re-Legitimization", window: "D0-D+30", threshold: "Regime-aligned mobilization exceeds anti-regime mobilization in key urban centers." },
+        { id: "proxy_orphan", title: "Proxy Orphan Escalation", window: "D+7-D+90", threshold: "Uncoordinated mass proxy strikes or resource seizures force ground response or partner defection." },
+        { id: "domestic_collapse", title: "Domestic Political Collapse", window: "D0-D+90", threshold: "US political runway collapses through formal restriction action and sustained support breakdown." }
+      ];
+
+      var END_STATES = [
+        { id: "A", label: "End State A: Clean Transition", description: "Full Artesh pivot + bazaari buy-in + internal-led council.", value: 10 },
+        { id: "B", label: "End State B: Negotiated Settlement", description: "Partial IRGC continuity inside a hybrid nationalist-military compact.", value: 20 },
+        { id: "C", label: "End State C: IRGC Junta", description: "IRGC reconsolidates coercive control with external lifeline support.", value: 45 },
+        { id: "D", label: "End State D: Fragmented Conflict", description: "No national monopoly on force; regionalized control zones.", value: 25 }
+      ];
+
+      var OSINT_BASELINE_2026_03_01 = {
+        dayPlus: 2,
+        items: {
+          "1.1": { done: true, status: "Green", confidence: "High", notes: "01 Mar 2026: Iranian state-media confirmation of Khamenei death was widely carried by AP and regional outlets. Treated as high-confidence." },
+          "1.2": { done: false, status: "Red", confidence: "Med", notes: "A constitutional interim council is active, indicating continuity rather than succession paralysis." },
+          "1.3": { done: false, status: "Red", confidence: "Med", notes: "Coordinated retaliatory Iranian strikes across theaters indicate central command remains at least partially functional." },
+          "1.4": { done: false, status: "Red", confidence: "Med", notes: "IAEA reporting (via AP) indicates no access to affected facilities and inability to verify enrichment suspension/stockpile status." },
+          "1.5": { done: false, status: "Red", confidence: "Med", notes: "No verified sustained information-domain capture of state broadcast infrastructure." },
+
+          "2.1": { done: false, status: "Red", confidence: "Low", notes: "No verified evidence of broad Artesh refusal to comply with regime coercive directives." },
+          "2.2": { done: false, status: "Red", confidence: "Low", notes: "No confirmed Artesh-on-IRGC protection engagements in major urban centers." },
+          "2.3": { done: false, status: "Red", confidence: "Low", notes: "No validated quietist-clerical break with coercive regime authority in this cycle." },
+          "2.4": { done: false, status: "Red", confidence: "Low", notes: "No verified amnesty-driven attrition at a scale near threshold." },
+          "2.5": { done: false, status: "Red", confidence: "Low", notes: "No evidence of transition-supportive control in 4 of 6 key regions." },
+
+          "3.1": { done: false, status: "Red", confidence: "Low", notes: "No verified sustained bazaar/informal-economy normalization under active conflict conditions." },
+          "3.2": { done: false, status: "Red", confidence: "Low", notes: "No verified neighborhood-level security handover to accountable local structures." },
+          "3.3": { done: false, status: "Red", confidence: "Low", notes: "No confirmed evidence that Bandar Abbas is secured/open for stable humanitarian throughput." },
+          "3.4": { done: false, status: "Red", confidence: "Low", notes: "No verified liquidity-injection and repatriation program active at transition scale." },
+          "3.5": { done: false, status: "Red", confidence: "Low", notes: "No validated signal that informal sanctions-era channels are aligning with formal controls." },
+
+          "4.1": { done: false, status: "Red", confidence: "Med", notes: "Observed governance mechanism is constitutional continuity, not an internal-led hybrid transition coalition." },
+          "4.2": { done: false, status: "Red", confidence: "Low", notes: "No evidence of Basij social-function conversion into civilian transition institutions." },
+          "4.3": { done: false, status: "Red", confidence: "Low", notes: "No new intrusive normalization package signed; IAEA access constraints persist." },
+          "4.4": { done: false, status: "Red", confidence: "Low", notes: "No validated indicator of broad uncensored media recovery." }
+        },
+        triggers: {
+          russia_china: { fired: false, notes: "Diplomatic condemnation is visible; no verified material reconstitution package confirmed." },
+          trap_1991: { fired: false, notes: "Urban-protection posture remains unclear; threshold mass-repression sequence not yet confirmed in this tracker cycle." },
+          cyber: { fired: false, notes: "No validated sustained US/allied critical-infrastructure collapse event in current source set." },
+          arab_veto: { fired: false, notes: "No formal revocation of US basing/airspace rights by key Gulf partners confirmed." },
+          ground_pivot: { fired: false, notes: "No verified external conventional ground deployment to seize/hold Iranian terrain." },
+          turkey_kurdish: { fired: false, notes: "No verified Turkish cross-border operation into Iranian Kurdish zones during this update window." },
+          humanitarian: { fired: false, notes: "No validated refugee outflow near 1.5M threshold; monitor transport/shipping disruptions as lead indicators." },
+          nationalist_backlash: { fired: false, notes: "Elevated risk: pro-government mobilization observed, but not enough verified evidence that it exceeds anti-regime mobilization nationwide." },
+          proxy_orphan: { fired: false, notes: "Proxy escalation risk remains high, but orphan-network threshold event forcing ground response is not yet verified." },
+          domestic_collapse: { fired: false, notes: "US political pressure is rising, but no enacted continuation-limiting restriction. AAA national gas average around $2.98 on 01 Mar 2026." }
+        },
+        endStates: { A: 8, B: 20, C: 47, D: 25 },
+        snapshot:
+          "01 Mar 2026 baseline: Khamenei death is broadly treated as confirmed in state and international reporting. A constitutional interim leadership mechanism is active, so succession paralysis is not evidenced. CENTCOM reports ongoing strikes and US casualties (3 KIA, 5 seriously wounded), while Iranian retaliatory strike coordination indicates C2 is degraded but not severed. IAEA access/verification gaps persist at key nuclear sites. The clean-transition path is currently low-probability; IRGC-junta and fragmentation trajectories remain dominant."
+      };
+
+      function buildDefaultState() {
+        var items = {};
+        PHASES.forEach(function (phase) {
+          phase.items.forEach(function (item) {
+            items[item.code] = {
+              done: false,
+              status: item.status,
+              confidence: item.confidence,
+              notes: ""
+            };
+          });
+        });
+
+        var triggers = {};
+        TRIGGERS.forEach(function (trigger) {
+          triggers[trigger.id] = { fired: false, notes: "" };
+        });
+
+        var endStates = {};
+        END_STATES.forEach(function (entry) {
+          endStates[entry.id] = entry.value;
+        });
+
+        var base = {
+          items: items,
+          triggers: triggers,
+          endStates: endStates,
+          dayPlus: 2,
+          snapshot: "",
+          updatedAt: null
+        };
+
+        Object.keys(OSINT_BASELINE_2026_03_01.items).forEach(function (code) {
+          if (base.items[code]) {
+            Object.assign(base.items[code], OSINT_BASELINE_2026_03_01.items[code]);
+          }
+        });
+
+        Object.keys(OSINT_BASELINE_2026_03_01.triggers).forEach(function (id) {
+          if (base.triggers[id]) {
+            Object.assign(base.triggers[id], OSINT_BASELINE_2026_03_01.triggers[id]);
+          }
+        });
+
+        Object.keys(OSINT_BASELINE_2026_03_01.endStates).forEach(function (id) {
+          if (typeof base.endStates[id] === "number") {
+            base.endStates[id] = OSINT_BASELINE_2026_03_01.endStates[id];
+          }
+        });
+
+        base.dayPlus = OSINT_BASELINE_2026_03_01.dayPlus;
+        base.snapshot = OSINT_BASELINE_2026_03_01.snapshot;
+
+        return base;
+      }
+
+      var state = buildDefaultState();
+
+      function mergeState(saved) {
+        if (!saved || typeof saved !== "object") return;
+        if (saved.items && typeof saved.items === "object") {
+          Object.keys(state.items).forEach(function (code) {
+            if (saved.items[code] && typeof saved.items[code] === "object") {
+              var item = saved.items[code];
+              state.items[code].done = Boolean(item.done);
+              if (["Green", "Amber", "Red"].indexOf(item.status) >= 0) state.items[code].status = item.status;
+              if (["Low", "Med", "High"].indexOf(item.confidence) >= 0) state.items[code].confidence = item.confidence;
+              if (typeof item.notes === "string") state.items[code].notes = item.notes;
+            }
+          });
+        }
+        if (saved.triggers && typeof saved.triggers === "object") {
+          Object.keys(state.triggers).forEach(function (id) {
+            if (saved.triggers[id] && typeof saved.triggers[id] === "object") {
+              state.triggers[id].fired = Boolean(saved.triggers[id].fired);
+              if (typeof saved.triggers[id].notes === "string") state.triggers[id].notes = saved.triggers[id].notes;
+            }
+          });
+        }
+        if (saved.endStates && typeof saved.endStates === "object") {
+          Object.keys(state.endStates).forEach(function (id) {
+            var value = Number(saved.endStates[id]);
+            if (!Number.isNaN(value)) {
+              state.endStates[id] = Math.max(0, Math.min(100, Math.round(value)));
+            }
+          });
+        }
+        if (typeof saved.dayPlus === "number") state.dayPlus = Math.max(0, Math.round(saved.dayPlus));
+        if (typeof saved.snapshot === "string") state.snapshot = saved.snapshot;
+        if (typeof saved.updatedAt === "string") state.updatedAt = saved.updatedAt;
+      }
+
+      function loadState() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          mergeState(JSON.parse(raw));
+        } catch (err) {
+          console.error("Failed to load tracker state:", err);
+        }
+      }
+
+      function saveState() {
+        state.updatedAt = new Date().toISOString();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        updateLastSaved();
+        renderStats();
+        renderGates();
+        renderSum();
+      }
+
+      function fmtDateTime(iso) {
+        if (!iso) return "never";
+        var dt = new Date(iso);
+        if (Number.isNaN(dt.getTime())) return "never";
+        return dt.toLocaleString();
+      }
+
+      function updateLastSaved() {
+        var node = document.getElementById("lastSaved");
+        node.textContent = "Last saved: " + fmtDateTime(state.updatedAt);
+      }
+
+      function getItem(code) {
+        return state.items[code];
+      }
+
+      function gateForCode(code) {
+        var found = null;
+        GATES.some(function (gate) {
+          if (gate.required.indexOf(code) >= 0) {
+            found = gate;
+            return true;
+          }
+          return false;
+        });
+        return found;
+      }
+
+      function tooltipHtml(text) {
+        return (
+          '<span class="info-tip" tabindex="0" aria-label="' + escapeAttr("Context: " + text) + '">' +
+            '<span class="info-tip-dot" aria-hidden="true">i</span>' +
+            '<span class="info-tip-card" role="tooltip">' + escapeHtml(text) + "</span>" +
+          "</span>"
+        );
+      }
+
+      function itemTooltipText(phase, item) {
+        var gate = gateForCode(item.code);
+        var roleText = "";
+        if (item.tag === "N") {
+          roleText = gate
+            ? "Why it matters: this is required for Gate " + gate.id + "; a Red status here can fail that gate."
+            : "Why it matters: this is a necessary condition for phase success.";
+        } else {
+          roleText = "Why it matters: this is a supporting signal that boosts confidence but does not directly decide gate pass/fail.";
+        }
+        return "What it means: " + item.criteria + " " + roleText + " Phase context: " + phase.objective;
+      }
+
+      function gateTooltipText(gate) {
+        return "What it means: day-bound checkpoint using required [N] conditions " + gate.required.join(", ") + ". Why it matters: a fail here triggers branch change - " + gate.branch;
+      }
+
+      function triggerTooltipText(trigger) {
+        return "What it means: invalidation watch condition inside " + trigger.window + ". Why it matters: if threshold is met, mark Fired and reassess assumptions immediately. Threshold: " + trigger.threshold;
+      }
+
+      function endStateTooltipText(entry) {
+        return "What it means: " + entry.description + " Why it matters: this slider shows current probability share; all four end states must total 100%.";
+      }
+
+      function evaluateGate(gate) {
+        var reqItems = gate.required.map(getItem);
+        var hasRed = reqItems.some(function (it) { return it.status === "Red"; });
+        if (hasRed) {
+          return { badge: "Fail", cls: "fail", reason: "At least one required condition is Red." };
+        }
+
+        var amberLow = reqItems.filter(function (it) {
+          return it.status === "Amber" && it.confidence === "Low";
+        }).length;
+        if (amberLow >= 2) {
+          return { badge: "Fail", cls: "fail", reason: "Two or more required conditions remain Amber with Low confidence." };
+        }
+
+        var allGreen = reqItems.every(function (it) { return it.status === "Green"; });
+        if (allGreen) {
+          var hasLow = reqItems.some(function (it) { return it.confidence === "Low"; });
+          if (hasLow) {
+            return { badge: "Hold", cls: "hold", reason: "Branch-lock safeguard: required signals are Green but include Low confidence." };
+          }
+          return { badge: "Pass", cls: "pass", reason: "All required conditions are Green with no Low-confidence blocker." };
+        }
+
+        return { badge: "At Risk", cls: "risk", reason: "Required conditions are mixed and not yet fully Green." };
+      }
+
+      function parseTriggerWindow(windowStr) {
+        var parts = windowStr.split("-");
+        if (parts.length < 2) return { start: 0, end: 999 };
+        var start = parseInt(parts[0].replace(/\D/g, ""), 10) || 0;
+        var end = parseInt(parts[1].replace(/\D/g, ""), 10) || 999;
+        return { start: start, end: end };
+      }
+
+      function windowBadge(windowStr) {
+        var w = parseTriggerWindow(windowStr);
+        if (state.dayPlus > w.end) return '<span class="window-badge window-expired">Past Window</span>';
+        if (state.dayPlus >= w.start) return '<span class="window-badge window-active">Active</span>';
+        return '<span class="window-badge window-pending">Upcoming</span>';
+      }
+
+      function phaseNSummary(phase) {
+        var nItems = phase.items.filter(function (item) { return item.tag === "N"; });
+        var greens = 0, reds = 0;
+        nItems.forEach(function (item) {
+          var s = state.items[item.code].status;
+          if (s === "Green") greens++;
+          if (s === "Red") reds++;
+        });
+        return { total: nItems.length, greens: greens, reds: reds, ambers: nItems.length - greens - reds };
+      }
+
+      function phaseMetaHtml(phase) {
+        var sum = phaseNSummary(phase);
+        var isActive = state.dayPlus >= phase.dayStart && state.dayPlus <= phase.dayEnd;
+        var isPast = state.dayPlus > phase.dayEnd;
+        var html = "";
+        if (isActive) html += '<span class="window-badge window-active">Active</span> ';
+        else if (isPast) html += '<span class="window-badge window-expired">Closed</span> ';
+        else html += '<span class="window-badge window-pending">Upcoming</span> ';
+        html += '<span class="phase-stat phase-stat-g">G:' + sum.greens + '</span> ';
+        html += '<span class="phase-stat phase-stat-a">A:' + sum.ambers + '</span> ';
+        html += '<span class="phase-stat phase-stat-r">R:' + sum.reds + '</span>';
+        html += '<span class="phase-stat phase-stat-t">&nbsp;/ ' + sum.total + ' [N]</span>';
+        return html;
+      }
+
+      function updatePhaseSummaries() {
+        PHASES.forEach(function (phase) {
+          var node = document.querySelector('.phase-meta[data-phase="' + phase.id + '"]');
+          if (node) node.innerHTML = phaseMetaHtml(phase);
+        });
+      }
+
+      function renderStats() {
+        var statsNode = document.getElementById("stats");
+        var allCodes = Object.keys(state.items);
+        var doneCount = allCodes.filter(function (code) { return state.items[code].done; }).length;
+        var greenCount = allCodes.filter(function (code) { return state.items[code].status === "Green"; }).length;
+        var redCount = allCodes.filter(function (code) { return state.items[code].status === "Red"; }).length;
+        var firedCount = Object.keys(state.triggers).filter(function (id) { return state.triggers[id].fired; }).length;
+        var passCount = GATES.filter(function (gate) { return evaluateGate(gate).badge === "Pass"; }).length;
+
+        statsNode.innerHTML = [
+          statCard("Checklist Completion", doneCount + " / " + allCodes.length, "What it means: count of milestone rows marked reviewed. Why it matters: this is analyst coverage, not success, and highlights what still needs assessment."),
+          statCard("Green Conditions", greenCount + " | Red: " + redCount, "What it means: current distribution of satisfied versus failed milestone conditions. Why it matters: this quickly shows whether trajectory is improving or degrading."),
+          statCard("Gates Passing", passCount + " / " + GATES.length, "What it means: number of decision gates currently evaluated as Pass. Why it matters: gate status determines whether strategy can continue or must branch."),
+          statCard("Triggers Fired", firedCount + " / " + TRIGGERS.length, "What it means: count of invalidation triggers currently flagged Fired. Why it matters: more fired triggers means more baseline assumptions are broken.")
+        ].join("");
+      }
+
+      function statCard(label, value, tip) {
+        return '<article class="stat"><h3>' + label + tooltipHtml(tip) + '</h3><p>' + value + "</p></article>";
+      }
+
+      function segBtn(label, current) {
+        return '<button type="button" class="seg-btn' + (label === current ? ' active' : '') + '" data-value="' + label + '">' + label + '</button>';
+      }
+
+      function statusSegment(value) {
+        return (
+          '<div class="seg-group" data-field="status">' +
+            segBtn("Green", value) +
+            segBtn("Amber", value) +
+            segBtn("Red", value) +
+          '</div>'
+        );
+      }
+
+      function confidenceSegment(value) {
+        return (
+          '<div class="seg-group" data-field="confidence">' +
+            segBtn("High", value) +
+            segBtn("Med", value) +
+            segBtn("Low", value) +
+          '</div>'
+        );
+      }
+
+      function renderPhases() {
+        var phasesNode = document.getElementById("phases");
+        var html = [];
+        var cardIndex = 7;
+
+        PHASES.forEach(function (phase) {
+          html.push(
+            '<section class="phase-card" style="--i:' + cardIndex + '">' +
+              '<div class="phase-head">' +
+                '<div>' +
+                  '<h2><span class="phase-chevron">&#9660;</span> ' + phase.title + "</h2>" +
+                  "<p>" + phase.objective + "</p>" +
+                "</div>" +
+                '<div class="phase-meta" data-phase="' + phase.id + '">' + phaseMetaHtml(phase) + '</div>' +
+              "</div>" +
+              '<div class="item-list-wrap"><div class="item-list">'
+          );
+
+          phase.items.forEach(function (item) {
+            var saved = state.items[item.code];
+            var hasNotes = saved.notes && saved.notes.length > 0;
+            html.push(
+              '<article class="item" data-code="' + item.code + '" data-status="' + saved.status + '">' +
+                '<div class="item-top">' +
+                  '<div class="item-title">' +
+                    '<input type="checkbox" data-field="done" ' + (saved.done ? "checked" : "") + ">" +
+                    '<span class="item-code">' + item.code + "</span>" +
+                    "<span>" + item.title + "</span>" +
+                    tooltipHtml(itemTooltipText(phase, item)) +
+                    '<span class="tag ' + item.tag.toLowerCase() + '">' + item.tag + "</span>" +
+                  "</div>" +
+                "</div>" +
+                "<p>" + item.criteria + "</p>" +
+                '<div class="item-controls">' +
+                  '<div class="control-group"><label>Status</label>' + statusSegment(saved.status) + '</div>' +
+                  '<div class="control-group"><label>Confidence</label>' + confidenceSegment(saved.confidence) + '</div>' +
+                "</div>" +
+                '<div class="note-section">' +
+                  '<button type="button" class="note-toggle">' + (hasNotes ? '- Note' : '+ Note') + '</button>' +
+                  '<textarea class="item-notes' + (hasNotes ? ' visible' : '') + '" data-field="notes" placeholder="Analyst notes, evidence links, source confidence...">' + escapeHtml(saved.notes) + '</textarea>' +
+                '</div>' +
+              "</article>"
+            );
+          });
+
+          html.push("</div></div></section>");
+          cardIndex += 1;
+        });
+
+        phasesNode.innerHTML = html.join("");
+      }
+
+      function renderGates() {
+        var gatesNode = document.getElementById("gates");
+        gatesNode.innerHTML = GATES.map(function (gate) {
+          var evalResult = evaluateGate(gate);
+          return (
+            '<article class="gate">' +
+              '<div class="gate-head">' +
+                '<span class="inline-head">' + gate.title + tooltipHtml(gateTooltipText(gate)) + "</span>" +
+                '<span class="gate-badge ' + evalResult.cls + '">' + evalResult.badge + "</span>" +
+              "</div>" +
+              '<p>Required [N]: ' + gate.required.join(", ") + "</p>" +
+              "<p>" + evalResult.reason + "</p>" +
+              "<p>" + gate.branch + "</p>" +
+            "</article>"
+          );
+        }).join("");
+      }
+
+      function renderTriggers() {
+        var node = document.getElementById("triggers");
+        node.innerHTML = TRIGGERS.map(function (trigger) {
+          var saved = state.triggers[trigger.id];
+          return (
+            '<article class="trigger" data-trigger="' + trigger.id + '">' +
+              '<div class="trigger-head">' +
+                '<span class="inline-head">' + trigger.title + tooltipHtml(triggerTooltipText(trigger)) + "</span>" +
+                '<span class="trigger-badge ' + (saved.fired ? "fail" : "pass") + '">' + (saved.fired ? "Fired" : "Clear") + "</span>" +
+              "</div>" +
+              '<p>Window: ' + trigger.window + ' ' + windowBadge(trigger.window) + "</p>" +
+              "<p>" + trigger.threshold + "</p>" +
+              '<div class="trigger-controls">' +
+                '<label class="checkline"><input data-trigger-field="fired" type="checkbox" ' + (saved.fired ? "checked" : "") + '>Mark trigger fired</label>' +
+                '<textarea data-trigger-field="notes" placeholder="Evidence, event timestamp, and source notes...">' + escapeHtml(saved.notes) + "</textarea>" +
+              "</div>" +
+            "</article>"
+          );
+        }).join("");
+      }
+
+      function renderEndStates() {
+        var node = document.getElementById("endStates");
+        node.innerHTML = END_STATES.map(function (entry) {
+          var value = state.endStates[entry.id];
+          return (
+            '<article class="end-row" data-end-state="' + entry.id + '">' +
+              '<div class="end-row-head">' +
+                '<span class="inline-head">' + entry.label + tooltipHtml(endStateTooltipText(entry)) + "</span>" +
+                '<strong><span data-end-value="' + entry.id + '">' + value + "</span>%</strong>" +
+              "</div>" +
+              '<input type="range" min="0" max="100" step="1" data-end-range="' + entry.id + '" value="' + value + '">' +
+            "</article>"
+          );
+        }).join("");
+      }
+
+      function renderSum() {
+        var total = Object.keys(state.endStates).reduce(function (acc, id) {
+          return acc + Number(state.endStates[id] || 0);
+        }, 0);
+        var node = document.getElementById("sumReadout");
+        node.textContent = "Probability total: " + total + "% (target = 100%)";
+        node.classList.toggle("bad", total !== 100);
+
+        var cdTotal = (Number(state.endStates["C"]) || 0) + (Number(state.endStates["D"]) || 0);
+        var warnNode = document.getElementById("cdWarning");
+        if (cdTotal > 50) {
+          warnNode.style.display = "block";
+          warnNode.textContent = "C + D = " + cdTotal + "% \u2014 Branch rule triggered: formally deprioritize clean-transition planning.";
+        } else {
+          warnNode.style.display = "none";
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function escapeAttr(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/"/g, "&quot;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function updateThemeBtn() {
+        var btn = document.getElementById("themeToggle");
+        var isDark = document.documentElement.getAttribute("data-theme") === "dark";
+        btn.textContent = isDark ? "Light Mode" : "Dark Mode";
+      }
+
+      function wireEvents() {
+        /* Phase click handler: segmented buttons, note toggles, phase collapse */
+        document.getElementById("phases").addEventListener("click", function (event) {
+          /* Segmented control buttons */
+          var btn = event.target.closest(".seg-btn");
+          if (btn) {
+            var group = btn.closest(".seg-group");
+            var field = group.getAttribute("data-field");
+            var value = btn.getAttribute("data-value");
+            var itemNode = btn.closest(".item");
+            var code = itemNode.getAttribute("data-code");
+
+            group.querySelectorAll(".seg-btn").forEach(function (b) { b.classList.remove("active"); });
+            btn.classList.add("active");
+
+            if (field === "status") {
+              state.items[code].status = value;
+              itemNode.setAttribute("data-status", value);
+            }
+            if (field === "confidence") {
+              state.items[code].confidence = value;
+            }
+            saveState();
+            updatePhaseSummaries();
+            return;
+          }
+
+          /* Note toggle */
+          var noteBtn = event.target.closest(".note-toggle");
+          if (noteBtn) {
+            var textarea = noteBtn.parentElement.querySelector(".item-notes");
+            var isVisible = textarea.classList.contains("visible");
+            textarea.classList.toggle("visible");
+            noteBtn.textContent = isVisible ? "+ Note" : "- Note";
+            if (!isVisible) textarea.focus();
+            return;
+          }
+
+          /* Phase collapse toggle */
+          var phaseHead = event.target.closest(".phase-head");
+          if (phaseHead) {
+            var phaseCard = phaseHead.closest(".phase-card");
+            phaseCard.classList.toggle("collapsed");
+            return;
+          }
+        });
+
+        /* Done checkbox */
+        document.getElementById("phases").addEventListener("change", function (event) {
+          var itemNode = event.target.closest(".item");
+          if (!itemNode) return;
+          var code = itemNode.getAttribute("data-code");
+          var field = event.target.getAttribute("data-field");
+          if (!code || !field) return;
+
+          if (field === "done") state.items[code].done = event.target.checked;
+          saveState();
+          updatePhaseSummaries();
+        });
+
+        /* Notes textarea */
+        document.getElementById("phases").addEventListener("input", function (event) {
+          var itemNode = event.target.closest(".item");
+          if (!itemNode) return;
+          if (event.target.getAttribute("data-field") !== "notes") return;
+          var code = itemNode.getAttribute("data-code");
+          state.items[code].notes = event.target.value;
+          saveState();
+        });
+
+        /* Triggers */
+        document.getElementById("triggers").addEventListener("change", function (event) {
+          var triggerNode = event.target.closest(".trigger");
+          if (!triggerNode) return;
+          var id = triggerNode.getAttribute("data-trigger");
+          var field = event.target.getAttribute("data-trigger-field");
+          if (!id || !field) return;
+          if (field === "fired") state.triggers[id].fired = event.target.checked;
+          saveState();
+          renderTriggers();
+        });
+
+        document.getElementById("triggers").addEventListener("input", function (event) {
+          var triggerNode = event.target.closest(".trigger");
+          if (!triggerNode) return;
+          if (event.target.getAttribute("data-trigger-field") !== "notes") return;
+          var id = triggerNode.getAttribute("data-trigger");
+          state.triggers[id].notes = event.target.value;
+          saveState();
+        });
+
+        /* End-state sliders */
+        document.getElementById("endStates").addEventListener("input", function (event) {
+          var id = event.target.getAttribute("data-end-range");
+          if (!id) return;
+          var value = Math.max(0, Math.min(100, Math.round(Number(event.target.value) || 0)));
+          state.endStates[id] = value;
+          var label = document.querySelector('[data-end-value="' + id + '"]');
+          if (label) label.textContent = String(value);
+          saveState();
+        });
+
+        /* Snapshot */
+        document.getElementById("snapshot").addEventListener("input", function (event) {
+          state.snapshot = event.target.value;
+          saveState();
+        });
+
+        /* Day counter – update summaries without full re-render to preserve collapse/note state */
+        document.getElementById("dayInput").addEventListener("input", function (event) {
+          state.dayPlus = Math.max(0, Math.round(Number(event.target.value) || 0));
+          saveState();
+          updatePhaseSummaries();
+          renderTriggers();
+        });
+
+        /* Export */
+        document.getElementById("exportBtn").addEventListener("click", function () {
+          var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url;
+          a.download = "irantracker-state-" + new Date().toISOString().slice(0, 10) + ".json";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        });
+
+        /* Import */
+        document.getElementById("importFile").addEventListener("change", function (event) {
+          var file = event.target.files && event.target.files[0];
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function () {
+            try {
+              var imported = JSON.parse(String(reader.result || "{}"));
+              mergeState(imported);
+              saveState();
+              renderAll();
+            } catch (err) {
+              alert("Import failed: invalid JSON file.");
+            }
+          };
+          reader.readAsText(file);
+          event.target.value = "";
+        });
+
+        /* Reset */
+        document.getElementById("resetBtn").addEventListener("click", function () {
+          var ok = window.confirm("Reset all tracker data (statuses, notes, triggers, and end-state values)?");
+          if (!ok) return;
+          state = buildDefaultState();
+          saveState();
+          renderAll();
+        });
+
+        /* Theme toggle */
+        document.getElementById("themeToggle").addEventListener("click", function () {
+          var isDark = document.documentElement.getAttribute("data-theme") === "dark";
+          if (isDark) {
+            document.documentElement.removeAttribute("data-theme");
+            localStorage.setItem(THEME_KEY, "light");
+          } else {
+            document.documentElement.setAttribute("data-theme", "dark");
+            localStorage.setItem(THEME_KEY, "dark");
+          }
+          updateThemeBtn();
+        });
+      }
+
+      function renderAll() {
+        renderPhases();
+        renderTriggers();
+        renderGates();
+        renderEndStates();
+        renderStats();
+        renderSum();
+        document.getElementById("snapshot").value = state.snapshot;
+        document.getElementById("dayInput").value = state.dayPlus;
+        updateLastSaved();
+        updateThemeBtn();
+      }
+
+      loadState();
+      renderAll();
+      wireEvents();
+    })();
+  </script>
+</body>
+</html>
