@@ -158,7 +158,12 @@
       display: inline-flex;
       align-items: center;
       vertical-align: middle;
-      z-index: 2;
+      z-index: 1;
+    }
+
+    .info-tip:hover,
+    .info-tip:focus-within {
+      z-index: 10000;
     }
 
     .info-tip-dot {
@@ -176,36 +181,82 @@
       justify-content: center;
       cursor: help;
       user-select: none;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .info-tip:hover .info-tip-dot {
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
     .info-tip-card {
       position: absolute;
       left: 0;
-      top: calc(100% + 7px);
-      width: min(340px, calc(100vw - 40px));
-      padding: 8px 9px;
+      top: calc(100% + 9px);
+      width: min(380px, calc(100vw - 40px));
+      padding: 10px 12px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--panel);
       color: var(--ink-muted);
       font-size: 0.74rem;
-      line-height: 1.45;
-      box-shadow: var(--shadow);
+      line-height: 1.5;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
       opacity: 0;
       transform: translateY(4px);
       pointer-events: none;
       transition: opacity 0.16s ease, transform 0.16s ease;
+      z-index: 10000;
+    }
+
+    .info-tip-card::before {
+      content: "";
+      position: absolute;
+      top: -6px;
+      left: 3px;
+      width: 10px;
+      height: 10px;
+      background: var(--panel);
+      border-left: 1px solid var(--line);
+      border-top: 1px solid var(--line);
+      transform: rotate(45deg);
+    }
+
+    .sidebar .info-tip-card::before {
+      left: auto;
+      right: 3px;
     }
 
     .info-tip:hover .info-tip-card,
     .info-tip:focus-within .info-tip-card {
       opacity: 1;
       transform: translateY(0);
+      pointer-events: auto;
     }
 
     .info-tip:focus-visible .info-tip-dot {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
+    }
+
+    /* Sidebar tooltips open leftward to avoid viewport clipping */
+    .sidebar .info-tip-card {
+      left: auto;
+      right: 0;
+    }
+
+    [data-theme="dark"] .info-tip-card {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Elevate any panel/card whose tooltip is active above sibling stacking contexts */
+    .panel:has(.info-tip:hover),
+    .panel:has(.info-tip:focus-within),
+    .phase-card:has(.info-tip:hover),
+    .phase-card:has(.info-tip:focus-within),
+    .stat:has(.info-tip:hover),
+    .stat:has(.info-tip:focus-within) {
+      z-index: 100;
     }
 
     /* Toolbar */
@@ -933,7 +984,7 @@
         <h3>Current Snapshot</h3>
         <span class="info-tip" tabindex="0" aria-label="More context">
           <span class="info-tip-dot" aria-hidden="true">i</span>
-          <span class="info-tip-card" role="tooltip">Meaning: this is the high-level operational brief for handoffs and quick situational understanding. Why it matters: the rest of the tracker explains and scores the details behind this summary.</span>
+          <span class="info-tip-card" role="tooltip">The top-level assessment of Iran's political-military trajectory. Synthesizes signals across regime stability, military posture, economic resilience, and international dynamics into a single operational narrative for rapid situational awareness.</span>
         </span>
       </div>
       <p class="tiny">Start here for the one-screen analyst narrative, then validate details in phases, gates, triggers, and convergence estimates below.</p>
@@ -967,7 +1018,7 @@
             <h3>Decision Gates</h3>
             <span class="info-tip" tabindex="0" aria-label="More context">
               <span class="info-tip-dot" aria-hidden="true">i</span>
-              <span class="info-tip-card" role="tooltip">Meaning: each gate is a day-bound checkpoint that evaluates required [N] milestones. Why it matters: gate outcomes drive explicit branch decisions.</span>
+              <span class="info-tip-card" role="tooltip">Critical inflection points in Iran's crisis trajectory. Each gate tests whether key geopolitical conditions — regime command integrity, military loyalty, economic viability — have shifted enough to change the likely outcome path. A failed gate signals that the operating environment has diverged from transition assumptions.</span>
             </span>
           </div>
           <div class="gate-list" id="gates"></div>
@@ -978,7 +1029,7 @@
             <h3>Invalidation Triggers</h3>
             <span class="info-tip" tabindex="0" aria-label="More context">
               <span class="info-tip-dot" aria-hidden="true">i</span>
-              <span class="info-tip-card" role="tooltip">Meaning: trigger thresholds represent events that can invalidate the baseline plan. Why it matters: once fired, analysts should reassess branch assumptions immediately.</span>
+              <span class="info-tip-card" role="tooltip">External shocks and escalation events that can fundamentally reshape Iran's crisis trajectory regardless of internal dynamics — great-power intervention, regional contagion, humanitarian catastrophe, or domestic political shifts in partner nations. A fired trigger means the geopolitical environment has changed enough to invalidate baseline assumptions.</span>
             </span>
           </div>
           <div class="trigger-list" id="triggers"></div>
@@ -989,7 +1040,7 @@
             <h3>End-State Convergence</h3>
             <span class="info-tip" tabindex="0" aria-label="More context">
               <span class="info-tip-dot" aria-hidden="true">i</span>
-              <span class="info-tip-card" role="tooltip">Meaning: these sliders estimate current convergence probability across four modeled outcomes. Why it matters: convergence informs planning posture and risk communication.</span>
+              <span class="info-tip-card" role="tooltip">Probability distribution across four modeled outcomes for Iran's post-crisis political order: democratic transition, negotiated settlement, IRGC reconsolidation, or state fragmentation. The balance between these signals which geopolitical risks to prioritize and which diplomatic, military, and humanitarian postures to adopt.</span>
             </span>
           </div>
           <p class="tiny">Adjust estimated convergence probabilities. Keep combined total at 100%.</p>
@@ -1295,28 +1346,25 @@
       }
 
       function itemTooltipText(phase, item) {
-        var gate = gateForCode(item.code);
         var roleText = "";
         if (item.tag === "N") {
-          roleText = gate
-            ? "Why it matters: this is required for Gate " + gate.id + "; a Red status here can fail that gate."
-            : "Why it matters: this is a necessary condition for phase success.";
+          roleText = "This is a necessary condition — without it, the crisis trajectory is more likely to stabilize under existing power structures or fragment into prolonged instability.";
         } else {
-          roleText = "Why it matters: this is a supporting signal that boosts confidence but does not directly decide gate pass/fail.";
+          roleText = "This is a reinforcing indicator. Its absence does not block progress, but its presence significantly reduces the risk of reversal or stalemate.";
         }
-        return "What it means: " + item.criteria + " " + roleText + " Phase context: " + phase.objective;
+        return item.criteria + " " + roleText + " Phase objective: " + phase.objective;
       }
 
       function gateTooltipText(gate) {
-        return "What it means: day-bound checkpoint using required [N] conditions " + gate.required.join(", ") + ". Why it matters: a fail here triggers branch change - " + gate.branch;
+        return "Tests whether conditions " + gate.required.join(", ") + " have been met. If this gate fails, the geopolitical environment has diverged from transition assumptions: " + gate.branch;
       }
 
       function triggerTooltipText(trigger) {
-        return "What it means: invalidation watch condition inside " + trigger.window + ". Why it matters: if threshold is met, mark Fired and reassess assumptions immediately. Threshold: " + trigger.threshold;
+        return "Monitoring window: " + trigger.window + ". This scenario, if realized, would reshape the operating environment enough to invalidate current trajectory assumptions. Threshold: " + trigger.threshold;
       }
 
       function endStateTooltipText(entry) {
-        return "What it means: " + entry.description + " Why it matters: this slider shows current probability share; all four end states must total 100%.";
+        return entry.description + " Higher probability here means diplomatic, military, and humanitarian planning should weight this outcome more heavily. All four end states must total 100%.";
       }
 
       function evaluateGate(gate) {
@@ -1403,10 +1451,10 @@
         var passCount = GATES.filter(function (gate) { return evaluateGate(gate).badge === "Pass"; }).length;
 
         statsNode.innerHTML = [
-          statCard("Checklist Completion", doneCount + " / " + allCodes.length, "What it means: count of milestone rows marked reviewed. Why it matters: this is analyst coverage, not success, and highlights what still needs assessment."),
-          statCard("Green Conditions", greenCount + " | Red: " + redCount, "What it means: current distribution of satisfied versus failed milestone conditions. Why it matters: this quickly shows whether trajectory is improving or degrading."),
-          statCard("Gates Passing", passCount + " / " + GATES.length, "What it means: number of decision gates currently evaluated as Pass. Why it matters: gate status determines whether strategy can continue or must branch."),
-          statCard("Triggers Fired", firedCount + " / " + TRIGGERS.length, "What it means: count of invalidation triggers currently flagged Fired. Why it matters: more fired triggers means more baseline assumptions are broken.")
+          statCard("Checklist Completion", doneCount + " / " + allCodes.length, "How many milestones an analyst has reviewed, not how many have succeeded. Low coverage means blind spots in the assessment — conditions may have shifted without being captured."),
+          statCard("Green Conditions", greenCount + " | Red: " + redCount, "The balance between confirmed-favorable and confirmed-unfavorable conditions across Iran's political, military, and economic landscape. A rising Red count signals the crisis is hardening against transition; rising Green signals momentum toward regime change."),
+          statCard("Gates Passing", passCount + " / " + GATES.length, "How many critical geopolitical inflection points have been cleared. Each passing gate means a major prerequisite for orderly transition has been met — regime paralysis, military realignment, economic stabilization, or political consolidation."),
+          statCard("Triggers Fired", firedCount + " / " + TRIGGERS.length, "How many external shock scenarios have materialized — Russian/Chinese intervention, humanitarian crisis, coalition fracture, or domestic political collapse. Each fired trigger fundamentally changes the operating environment.")
         ].join("");
       }
 
